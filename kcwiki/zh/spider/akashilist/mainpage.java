@@ -64,10 +64,10 @@ import org.kcwiki.zh.utils.constant;
 public class mainpage {
     private static final String[] weekDays = {"日", "月", "火", "水", "木", "金", "土"};
     private static final String[] Days = {"sun", "mon", "tue", "wed", "thu", "fry", "sat"};
-    private static HashMap<String,JSONObject> daysMap = new LinkedHashMap<>();
-    private static HashMap<String,JSONObject> typesMap = new LinkedHashMap<>();
-    private static HashMap<String,JSONObject> itemsMap = new LinkedHashMap<>();
-    private static HashMap<String,String> typealias = new HashMap<>();
+    private static final HashMap<String,JSONObject> daysMap = new LinkedHashMap<>();
+    private static final HashMap<String,JSONObject> typesMap = new LinkedHashMap<>();
+    private static final HashMap<String,JSONObject> itemsMap = new LinkedHashMap<>();
+    private static final HashMap<String,String> typealias = new LinkedHashMap<>();
     private static boolean isInit = false;
     
     public static void JSONFileGenerator() {
@@ -409,7 +409,7 @@ public class mainpage {
         //Set<String> daysStor = new HashSet<>();
         //Set<String> typesStor = new HashSet<>();
         Set<String> result = new HashSet<>();
-        HashMap<String,JSONObject> dataMap = new HashMap<>();
+        HashMap<String,JSONObject> dataMap = new LinkedHashMap<>();
         for(String key:daysJobj.keySet()){
             daysSet.add(key);
         }
@@ -421,10 +421,16 @@ public class mainpage {
         typesStor.addAll(typesSet);
         typesStor.retainAll(daysSet);
         daysStor.retainAll(typesStor);*/
-        result.addAll(daysSet);
-        result.retainAll(typesSet);
-        for(String item:result) {
-            dataMap.put(item, daysJobj.getJSONObject(item));
+        if(type.equals("saury")) {
+           for(String item:typesSet) {
+                dataMap.put(item, typesJobj.getJSONObject(item));
+            } 
+        } else {
+            result.addAll(daysSet);
+            result.retainAll(typesSet);
+            for(String item:result) {
+                dataMap.put(item, daysJobj.getJSONObject(item));
+            }
         }
         return dataMap;
     }
@@ -432,7 +438,6 @@ public class mainpage {
     public HashMap getItemDetail(String wid) {
         ArrayList<String> tmpList = new ArrayList<>();
         HashMap<String,Object> dataMap = new LinkedHashMap<>();
-        HashMap<String,Object> tmpMap = new LinkedHashMap<>();
         HashMap<String,Object> resourceMap = new LinkedHashMap<>();
         HashMap<String,Object> statusMap = new LinkedHashMap<>();
         
@@ -444,7 +449,18 @@ public class mainpage {
         tmpList.clear();
         
         JSONObject item = itemsMap.get(wid);
+        if(item == null) {
+            HashMap tmp = new LinkedHashMap<>();
+            tmp.put("failure", "该装备id不存在");
+            return tmp;
+        }
         
+        
+        if(item.getJSONArray("remodel_info") == null) {
+            HashMap tmp = new LinkedHashMap<>();
+            tmp.put("failure", "改修不可");
+            return tmp;
+        }
         JSONObject itemDetails = item.getJSONArray("remodel_info").getJSONObject(0).getJSONObject("resource_cost").getJSONObject("0 ～ 5");
         tmpList.add(itemDetails.getString("buildkit_num"));
         tmpList.add(itemDetails.getString("remodelkit_num"));
@@ -472,7 +488,7 @@ public class mainpage {
         }
         
         itemDetails = item.getJSONArray("remodel_info").getJSONObject(0).getJSONObject("base_cost");
-        HashMap<String,Integer>  baseCost = new HashMap<>();
+        HashMap<String,Integer>  baseCost = new LinkedHashMap<>();
         for(String resourceTypes:itemDetails.keySet()){
             baseCost.put(resourceTypes, itemDetails.getIntValue(resourceTypes));
         }

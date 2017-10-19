@@ -118,10 +118,10 @@ public class api {
                     //System.out.println(retVal);
                     org.kcwiki.zh.utils.RWFile.writeLog(retVal,null);
                     JSONObject Jobj = (JSONObject) JSON.parseObject(retVal).get("data");
-                    HashMap<String,Object> rare = new HashMap<>();
-                    HashMap<String,Object> notrare = new HashMap<>();
-                    HashMap<String,Object> mapData = new HashMap<>();
-                    HashMap<String,String> tmp = new HashMap<>();
+                    HashMap<String,Object> rare = new LinkedHashMap<>();
+                    HashMap<String,Object> notrare = new LinkedHashMap<>();
+                    HashMap<String,Object> mapData = new LinkedHashMap<>();
+                    HashMap<String,String> tmp = new LinkedHashMap<>();
                     for(String ship:Jobj.keySet()){
                         JSONObject dataList=(JSONObject) Jobj.get(ship);
                         tmp.put("ship", ship);

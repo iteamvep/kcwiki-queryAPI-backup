@@ -11,6 +11,7 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -35,13 +36,12 @@ public class test extends HttpServlet{
     response.setContentType("text/xml");
     response.setContentType("text/html;charset=UTF-8;pageEncoding=UTF-8"); 
             
-    HashMap<String, Object> data = new  HashMap<>();
+    HashMap<String,Object> data = new LinkedHashMap<>();
 
         String parameter=request.getParameter("query");
         //parameter = request.getQueryString();
         if(parameter != null){
-            String mapno;
-            Object tmp;
+            HashMap<String,Object> tmp;
             org.kcwiki.zh.querytrafficmanager.ControlTower controlTower = new org.kcwiki.zh.querytrafficmanager.ControlTower();
             switch(parameter){
                 default:
@@ -49,55 +49,55 @@ public class test extends HttpServlet{
                     data.put("data", "请求参数有误。");
                     break;
                 case "area":
-                    tmp = controlTower.controller("area", request).clone();
+                    tmp = controlTower.controller("area", request);
                     data.put("status", tmp !=null? "success":"error");
                     data.put("data",tmp !=null? tmp:null);
                     break;
                 case "map":
-                    tmp = controlTower.controller("map", request).clone();
+                    tmp = controlTower.controller("map", request);
                     data.put("status", tmp !=null? "success":"error");
                     data.put("data",tmp !=null? tmp:null);
                     break; 
                 case "point":
-                    tmp = controlTower.controller("point", request).clone();
+                    tmp = controlTower.controller("point", request);
                     data.put("status", tmp !=null? "success":"error");
                     data.put("data",tmp !=null? tmp:null);
                     break; 
                 case "expedition":
-                    tmp = controlTower.controller("expedition", request).clone();
+                    tmp = controlTower.controller("expedition", request);
                     data.put("status", tmp !=null? "success":"error");
                     data.put("data",tmp !=null? tmp:null);
                     break; 
                 case "mapfast":
-                    tmp = controlTower.controller("mapfast", request).clone();
+                    tmp = controlTower.controller("mapfast", request);
                     data.put("status", tmp !=null? "success":"error");
                     data.put("data",tmp !=null? tmp:null);
                     break; 
                 case "akashitype":
-                    tmp = controlTower.controller("akashitype", request).clone();
+                    tmp = controlTower.controller("akashitype", request);
                     data.put("status", tmp !=null? "success":"error");
                     data.put("data",tmp !=null? tmp:null);
                     break;
                 case "akashilist":
-                    JSONObject jobj = controlTower.controller("akashilist", request);
-                    if(jobj ==null) {
-                        data.put("status", "error");
-                        data.put("data", null);
-                    } else if(jobj.containsKey("failure")) {
-                        data.put("status", "failure");
-                        data.put("data",jobj.get("failure"));
-                    } else {
-                        data.put("status", "success");
-                        data.put("data",jobj.clone());
-                    }
-                    break;
-                case "akashiitem":
-                    tmp = controlTower.controller("akashiitem", request).clone();
+                    tmp = controlTower.controller("akashilist", request);
                     data.put("status", tmp !=null? "success":"error");
                     data.put("data",tmp !=null? tmp:null);
+                    break;
+                case "akashiitem":
+                    tmp = controlTower.controller("akashiitem", request);
+                    if(tmp ==null) {
+                        data.put("status", "error");
+                        data.put("data", null);
+                    } else if(tmp.containsKey("failure")) {
+                        data.put("status", "failure");
+                        data.put("data",tmp.get("failure"));
+                    } else {
+                        data.put("status", "success");
+                        data.put("data",tmp);
+                    }
                     break;   
                 case "thankslist":
-                    tmp = controlTower.controller("thankslist", request).clone();
+                    tmp = controlTower.controller("thankslist", request);
                     data.put("status", tmp !=null? "success":"error");
                     data.put("data",tmp !=null? tmp:null);
                     break;       
@@ -107,7 +107,7 @@ public class test extends HttpServlet{
             data.put("data", "请附带请求参数。");
         }
 
-        //data.put("data", new org.kcwiki.zh.spider.poidb.mainpage().test().clone());
+        //data.put("data", new org.kcwiki.zh.spider.poidb.mainpage().test());
     try (PrintWriter out = response.getWriter()) {
         out.println(JSON.toJSONString(data));
     } catch (Exception e) {

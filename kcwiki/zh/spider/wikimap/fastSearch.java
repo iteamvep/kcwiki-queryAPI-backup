@@ -28,7 +28,7 @@ public class fastSearch {
     HashMap<String,Object> dataMap = new LinkedHashMap<>();
     HashMap<String,Object> areaMap = new LinkedHashMap<>();
         
-    public HashMap<String, Object> search(Document html){
+    public HashMap search(Document html){
         //System.out.println(doc.toString());
         // 使用jsoup将html里面的a标签里面的数据全部读取出来（假如想读取其他标签，直接将a改为其他标签名称即可，例如"img"）
         Elements links = html.select(".tabs tabs-tabbox");
