@@ -32,7 +32,7 @@ public class loggerManager {
         } else {    
             inputStream = ClassLoader    
                     .getSystemResourceAsStream("log.properties");    
-        }    
+        }
         java.util.logging.LogManager logManager = java.util.logging.LogManager    
                 .getLogManager();    
         if (inputStream == null){  
@@ -84,5 +84,9 @@ public class loggerManager {
         }  
         return level;  
     }  
+    
+    public static void main(String[] args) {
+        
+    }
     
 }    
