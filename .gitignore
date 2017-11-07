@@ -1,7 +1,6 @@
- 
-/kcwiki/zh/calculator/*
-/kcwiki/zh/generator/*
-/kcwiki/zh/network/*
-/kcwiki/zh/wikitextparser/*
-/kcwiki/zh/storage/*
-/kcwiki/zh/webserver/view/debug.java
+
+/kcwiki/tools/generator/*
+/kcwiki/tools/network/*
+/kcwiki/tools/wikitextparser/*
+/kcwiki/storage/*
+/kcwiki/web/view/debug.java
