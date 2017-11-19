@@ -16,7 +16,6 @@ import javax.servlet.ServletContextEvent;
 import javax.servlet.ServletContextListener;
 
 import org.kcwiki.redis.JedisPoolUtils;
-import org.kcwiki.spider.akashilist.ThreadPool;
 import org.kcwiki.tools.constant;
 import static org.kcwiki.tools.constant.FILESEPARATOR;
 /**

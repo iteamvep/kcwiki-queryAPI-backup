@@ -5,18 +5,21 @@
  */
 package org.kcwiki.redis;
 
+import org.apache.commons.lang3.exception.ExceptionUtils;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import redis.clients.jedis.Jedis;
 import redis.clients.jedis.JedisPool;
 import redis.clients.jedis.JedisPoolConfig;
-import redis.clients.jedis.JedisSentinelPool;
 
 /**
  *
  * @author iTeam_VEP
  */
 public class JedisPoolUtils {
+    private static Log logger = LogFactory.getLog(JedisPoolUtils.class);  
     private static JedisPool pool = null;
-
+    
     /**
  * 建立连接池 真实环境，一般把配置参数缺抽取出来。
  * 
@@ -83,26 +86,48 @@ public class JedisPoolUtils {
             createJedisPool();
     }
 
-    /**
- * 获取一个jedis 对象
- * 
- * @return
- */
-    public static Jedis getJedis() {
-
-        if (pool == null)
+     /** 
+     * 获取Jedis对象 
+     *  
+     * @return 
+     */  
+    public static synchronized Jedis getJedis() {  
+        Jedis jedis = null;  
+        if (pool != null) {  
+            try {  
+                jedis = pool.getResource();   
+            } catch (Exception e) {  
+                System.err.println(ExceptionUtils.getStackTrace(e));
+            }  
+        }else{
             poolInit();
-        return pool.getResource();
-    }
-
-    /**
- * 归还一个连接
- * 
- * @param jedis
- */
-    public static void returnRes(Jedis jedis) {
-        pool.returnResource(jedis);
-    }
+            jedis = pool.getResource(); 
+        }  
+        return jedis;  
+    }  
+  
+    /** 
+     * 回收Jedis对象资源 
+     *  
+     * @param jedis 
+     */  
+    public static synchronized void returnResource(Jedis jedis) {  
+        if (jedis != null) {  
+            pool.returnResource(jedis);  
+        }  
+    }  
+  
+    /** 
+     * Jedis对象出异常的时候，回收Jedis对象资源 
+     *  
+     * @param jedis 
+     */  
+    public static synchronized void returnBrokenResource(Jedis jedis) {  
+        if (jedis != null) {  
+            pool.returnBrokenResource(jedis);  
+        }  
+  
+    }  
     
     /**
      * 释放jedis资源

@@ -8,6 +8,8 @@ package org.kcwiki.spider.akashilist;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
+import com.alibaba.fastjson.TypeReference;
+import com.alibaba.fastjson.parser.Feature;
 import java.io.IOException;
 import java.util.Iterator;
 import java.util.logging.Level;
@@ -440,7 +442,7 @@ public class mainpage {
         return dataMap;
     }
     
-    public HashMap getItemDetail(String wid) {
+    public HashMap getItemDetail(String wid,Boolean raw) {
         ArrayList<String> tmpList = new ArrayList<>();
         HashMap<String,Object> dataMap = new LinkedHashMap<>();
         HashMap<String,Object> resourceMap = new LinkedHashMap<>();
@@ -460,6 +462,9 @@ public class mainpage {
             return tmp;
         }
         
+        if(raw){
+            return JSON.parseObject(item.toJSONString(),new TypeReference<LinkedHashMap<String, Object>>() {},Feature.OrderedField);
+        }
         
         if(item.getJSONArray("remodel_info") == null) {
             HashMap tmp = new LinkedHashMap<>();
@@ -549,7 +554,7 @@ public class mainpage {
         init(); 
         new mainpage().getTypeList();
         //JSON.toJSONString(new mainpage().getItemList("all"));
-        JSON.toJSONString(new mainpage().getItemDetail("w020"));
+        JSON.toJSONString(new mainpage().getItemDetail("w020",false));
         /*HashMap tmp;
         tmp = new mainpage().search( Jsoup.parse(new mainpage().User_simulation("all",dayid())) );
         JSON.toJSONString(tmp.clone());

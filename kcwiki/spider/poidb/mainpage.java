@@ -119,6 +119,9 @@ public class mainpage {
     }
     
     public HashMap test1(String mapno) {
+        if(mapno == null){
+            mapno = "11"; 
+        }
         Document doc = null;
         try {
             doc = Jsoup.connect("https://db.kcwiki.org/drop/map/"+mapno)

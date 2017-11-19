@@ -16,6 +16,10 @@ import java.util.LinkedHashMap;
 import java.util.Set;
 import javax.servlet.http.HttpServletRequest;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.exception.ExceptionUtils;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+import org.kcwiki.redis.JedisPoolUtils;
 import static org.kcwiki.spider.akashilist.mainpage.dayid;
 import redis.clients.jedis.Jedis;
 
@@ -24,12 +28,17 @@ import redis.clients.jedis.Jedis;
  * @author iTeam_VEP
  */
 public class ControlTower {
+    private static Log logger = LogFactory.getLog(ControlTower.class);  
     
     public HashMap controller(String channel, HttpServletRequest request) {
-        Jedis jedis = org.kcwiki.redis.JedisPoolUtils.getJedis();
+        Jedis jedis = JedisPoolUtils.getJedis(); 
         String result = null ;
         String querystring = null ;
-        switch(channel){
+        try{
+            if(jedis == null){    
+                throw new NullPointerException("Jedis is Null");    
+            }  
+            switch(channel){
                 default:
                     return null;
                 case "area":
@@ -115,9 +124,17 @@ public class ControlTower {
                     break;
                 case "akashiitem":
                     String wid = request.getParameter("wid");
-                    querystring = "akashiitem" + wid ;
+                    String raw = request.getParameter("raw");
+                    boolean boolean_raw = false;
+                    if(raw == null)
+                        raw = "false";
+                    querystring = "akashiitem" + wid + raw;
+                    
+                    if(raw.toLowerCase().equals("true")){
+                        boolean_raw = true;
+                    }
                     if(!jedis.exists(querystring)) {
-                        HashMap tmp = new org.kcwiki.spider.akashilist.mainpage().getItemDetail(wid);
+                        HashMap tmp = new org.kcwiki.spider.akashilist.mainpage().getItemDetail(wid,boolean_raw);
                         result = JSON.toJSONString(tmp);
                         jedis.set(querystring, result);
                     } else {
@@ -135,8 +152,13 @@ public class ControlTower {
                     }
                     break;       
             }
-        
-        org.kcwiki.redis.JedisPoolUtils.returnRes(jedis);
+        }catch(NullPointerException | NumberFormatException e){    
+            JedisPoolUtils.returnBrokenResource(jedis);  
+            System.err.println(ExceptionUtils.getStackTrace(e));
+            logger.error(e.getMessage(), e);    
+        }finally{    
+            JedisPoolUtils.returnResource(jedis);    
+        }
         HashMap<String,Object> data = JSON.parseObject(result,new TypeReference<LinkedHashMap<String, Object>>() {},Feature.OrderedField);
         
         /*JSONObject tmpJobj = new JSONObject(true);

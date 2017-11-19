@@ -1,6 +1,3 @@
 
-/kcwiki/tools/generator/*
-/kcwiki/tools/network/*
-/kcwiki/tools/wikitextparser/*
 /kcwiki/storage/*
 /kcwiki/web/view/debug.java

@@ -5,14 +5,20 @@
  */
 package org.kcwiki.spider.wikimission;
 
+import com.alibaba.fastjson.JSON;
 import java.io.IOException;
+import java.util.HashMap;
 import java.util.Iterator;
+import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
+import org.kcwiki.tools.wikitextparser.module.hashmapextractor;
+import org.kcwiki.tools.wikitextparser.pageparser;
 
 /**
  *
@@ -116,6 +122,20 @@ public class mainpage {
         return true;
     }
     
+    public HashMap test(){
+        HashMap<String,Object> dataMap = new LinkedHashMap<>();
+        HashMap<String,Object> source = new pageparser().wikitest2hashmap("任务");
+        HashMap<String,Object> sourceMap = new hashmapextractor().getData(source);
+        
+        for(String index:sourceMap.keySet()){
+            if(index.contains("任务")) {
+                dataMap.put(index, sourceMap.get(index));
+            }
+        }
+        JSON.toJSONString(dataMap);
+        return dataMap;
+    }
+     
     public static void main(String[] args) {
 
         try {
@@ -126,7 +146,8 @@ public class mainpage {
                     .timeout(3000)           // 设置连接超时时间
                     .get();                 // 使用 POST 方法访问 URL   
             
-            new mainpage().search(doc);
+            //new mainpage().search(doc);
+            new mainpage().test();
 
                 } catch (IOException ex) {
                     Logger.getLogger(org.kcwiki.spider.wikimap.fastSearch.class.getName()).log(Level.SEVERE, null, ex);
