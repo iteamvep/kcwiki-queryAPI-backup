@@ -101,7 +101,11 @@ public class JedisPoolUtils {
             }  
         }else{
             poolInit();
-            jedis = pool.getResource(); 
+            try {  
+                jedis = pool.getResource();   
+            } catch (Exception e) {  
+                System.err.println(ExceptionUtils.getStackTrace(e));
+            } 
         }  
         return jedis;  
     }  
@@ -113,7 +117,11 @@ public class JedisPoolUtils {
      */  
     public static synchronized void returnResource(Jedis jedis) {  
         if (jedis != null) {  
-            pool.returnResource(jedis);  
+            try{
+                pool.returnResource(jedis);  
+            } catch (Exception e) {  
+                System.err.println(ExceptionUtils.getStackTrace(e));
+            } 
         }  
     }  
   

@@ -43,22 +43,20 @@ public class ControlTower {
                     return null;
                 case "area":
                     querystring = "area";
-                    if(!jedis.exists(querystring)) {
+                    result = jedis.get(querystring);
+                    if(result == null || result.equals("null")) {
                         result = JSON.toJSONString(new org.kcwiki.spider.poidb.mainpage().test());
                         jedis.set(querystring, result);
-                    } else {
-                        result = jedis.get(querystring);
                     }
                     break;
                 case "map":
                     String mapno = request.getParameter("mapno");
                     querystring = "map" + mapno;
-                    if(!jedis.exists(querystring)) {
+                    result = jedis.get(querystring);
+                    if(result == null || result.equals("null")) {
                         result = JSON.toJSONString(new org.kcwiki.spider.poidb.mainpage().test1(mapno));
                         
                         jedis.set(querystring, result);
-                    } else {
-                        result = jedis.get(querystring);
                     }
                     break; 
                 case "point":
@@ -68,58 +66,52 @@ public class ControlTower {
                         point = null;
                     }else if(point.length()>1){
                         //point = point.substring(0,point.indexOf("(B"));
-                        point = point.substring(0,1);
+                        //point = point.substring(0,1);
+                        point = point.trim();
                     }
                     String difficulty = request.getParameter("difficulty");
                     String assessment = request.getParameter("assessment");
                     if(Integer.valueOf(mapno) > 300){
                         querystring = "point" + mapno + point + difficulty + assessment ;
-                    } else {
-                        querystring = "point" + mapno + point ;
                     }
-                    if(!jedis.exists(querystring)) {
+                    result = jedis.get(querystring);
+                    if(result == null || result.equals("null")) {
                         result = JSON.toJSONString(new org.kcwiki.spider.poidb.api().test(mapno,point,difficulty,assessment));
                         jedis.set(querystring, result);
-                    } else {
-                        result = jedis.get(querystring);
                     }
                     break; 
                 case "expedition":
                     querystring = "expedition" ;
-                    if(!jedis.exists(querystring)) {
+                    result = jedis.get(querystring);
+                    if(result == null || result.equals("null")) {
                         result = JSON.toJSONString(new org.kcwiki.spider.wikiexpedition.mainpage().test());
                         jedis.set(querystring, result);
-                    } else {
-                        result = jedis.get(querystring);
                     }
                     break; 
                 case "mapfast":
                     querystring = "mapfast" ;
-                    if(!jedis.exists(querystring)) {
+                    result = jedis.get(querystring);
+                    if(result == null || result.equals("null")) {
                         result = JSON.toJSONString(new org.kcwiki.spider.wikimap.fastSearch().test());
                         jedis.set(querystring, result);
-                    } else {
-                        result = jedis.get(querystring);
                     }
                     break; 
                 case "akashitype":
                     querystring = "akashitype" ;
-                    if(!jedis.exists(querystring)) {
+                    result = jedis.get(querystring);
+                    if(result == null || result.equals("null")) {
                         result = JSON.toJSONString(new org.kcwiki.spider.akashilist.mainpage().getTypeList());
                         jedis.set(querystring, result);
-                    } else {
-                        result = jedis.get(querystring);
                     }
                     break;
                 case "akashilist":
                     String type = request.getParameter("type");
                     if(type == null || StringUtils.isBlank(type)) type = "all";
                     querystring = "akashilist" + dayid() + type ;
-                    if(!jedis.exists(querystring)) {
+                    result = jedis.get(querystring);
+                    if(result == null || result.equals("null")) {
                         result = JSON.toJSONString(new org.kcwiki.spider.akashilist.mainpage().getItemList(type));
                         jedis.set(querystring, result);
-                    } else {
-                        result = jedis.get(querystring);
                     }
                     break;
                 case "akashiitem":
@@ -133,22 +125,20 @@ public class ControlTower {
                     if(raw.toLowerCase().equals("true")){
                         boolean_raw = true;
                     }
-                    if(!jedis.exists(querystring)) {
+                    result = jedis.get(querystring);
+                    if(result == null || result.equals("null")) {
                         HashMap tmp = new org.kcwiki.spider.akashilist.mainpage().getItemDetail(wid,boolean_raw);
                         result = JSON.toJSONString(tmp);
                         jedis.set(querystring, result);
-                    } else {
-                        result = jedis.get(querystring);
                     }
                     break;   
                 case "thankslist":
                     //String name = request.getParameter("name");
                     querystring = "thankslist" ;
-                    if(!jedis.exists(querystring)) {
+                    result = jedis.get(querystring);
+                    if(result == null || result.equals("null")) {
                         result = JSON.toJSONString(new org.kcwiki.spider.akashilist.thankslist().test1());
                         jedis.set(querystring, result);
-                    } else {
-                        result = jedis.get(querystring);
                     }
                     break;       
             }
@@ -156,8 +146,8 @@ public class ControlTower {
             JedisPoolUtils.returnBrokenResource(jedis);  
             System.err.println(ExceptionUtils.getStackTrace(e));
             logger.error(e.getMessage(), e);    
-        }finally{    
-            JedisPoolUtils.returnResource(jedis);    
+        }finally{
+                JedisPoolUtils.returnResource(jedis);  
         }
         HashMap<String,Object> data = JSON.parseObject(result,new TypeReference<LinkedHashMap<String, Object>>() {},Feature.OrderedField);
         

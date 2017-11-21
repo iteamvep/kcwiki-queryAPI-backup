@@ -276,8 +276,8 @@ public class api {
             if(consistData.isEmpty()){
                 new api().getConstantData("https://static.kcwiki.org/db/scripts/drop/constant.js");
             }
-            new api().getDropData("https://db.kcwiki.org/drop/map/397/3/U-SAB.json");
-            
+            //new api().getDropData("https://db.kcwiki.org/drop/map/404/3/U-SAB.json");
+            new api().test("404",null,"3","SA");
         } catch (Exception ex) {
             Logger.getLogger(api.class.getName()).log(Level.SEVERE, null, ex);
         }
