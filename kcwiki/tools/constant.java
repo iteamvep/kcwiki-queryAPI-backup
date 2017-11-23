@@ -22,7 +22,12 @@ public class constant {
     private static String localPath = null;
     private final String itemsFilePath = getDataPath() + constant.FILESEPARATOR + "akashi.json";
     private final String filterFilePath = getDataPath() + constant.FILESEPARATOR + "akashiFilter.json";
-
+    private static final String StartUrl = "https://acc.kcwiki.org/start2";
+    //private static final String kcdata_ship = "http://kcwikizh.github.io/kcdata/ship/all.json";
+    //private static final String kcdata_slotitem = "http://kcwikizh.github.io/kcdata/slotitem/all.json";
+    private static final String kcdata_ship = "https://acc.kcwiki.org/kcdata/ship/all.json";
+    private static final String kcdata_slotitem = "https://acc.kcwiki.org/kcdata/slotitem/all.json";
+    
     /**
      * @return the webrootPath
      */
@@ -77,6 +82,27 @@ public class constant {
      */
     public String getFilterFilePath() {
         return filterFilePath;
+    }
+
+    /**
+     * @return the StartUrl
+     */
+    public static String getStartUrl() {
+        return StartUrl;
+    }
+
+    /**
+     * @return the kcdata_ship
+     */
+    public static String getKcdata_ship() {
+        return kcdata_ship;
+    }
+
+    /**
+     * @return the kcdata_slotitem
+     */
+    public static String getKcdata_slotitem() {
+        return kcdata_slotitem;
     }
 
     

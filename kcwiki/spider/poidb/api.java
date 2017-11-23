@@ -250,7 +250,7 @@ public class api {
     }
     
     public HashMap test(String mapno,String point,String difficulty,String assessment){
-        if(point == null){
+        if(point == null || point.endsWith("null")){
             String url = "";
             try {
                 url = Jsoup.connect("https://db.kcwiki.org/drop/map/"+mapno)
@@ -261,6 +261,14 @@ public class api {
             }
             url = url.replace(".html", ".json");
             return new api().getDropData(url);
+        }else if(point.length()>1){
+            //point = point.substring(0,point.indexOf("(B"));
+            //point = point.substring(0,1);
+            point = point.trim();
+            int index = point.indexOf("(");
+            if(index > 0){
+                point =point.substring(0, index).trim();
+            }
         }
         if(Integer.valueOf(mapno) > 300){
             return new api().getDropData("https://db.kcwiki.org/drop/map/"+mapno+"/"+difficulty+"/"+point+"-"+assessment+".json");
@@ -277,7 +285,7 @@ public class api {
                 new api().getConstantData("https://static.kcwiki.org/db/scripts/drop/constant.js");
             }
             //new api().getDropData("https://db.kcwiki.org/drop/map/404/3/U-SAB.json");
-            new api().test("404",null,"3","SA");
+            new api().test("404","ZZ3 (Boss)","3","SA");
         } catch (Exception ex) {
             Logger.getLogger(api.class.getName()).log(Level.SEVERE, null, ex);
         }

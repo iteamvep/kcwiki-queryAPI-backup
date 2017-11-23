@@ -41,6 +41,7 @@ import java.io.PrintStream;
 import java.io.UnsupportedEncodingException;
 import static java.lang.Thread.sleep;
 import java.net.MalformedURLException;
+import java.security.MessageDigest;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -48,6 +49,7 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Set;
 import java.util.TimeZone;
 import org.apache.commons.lang3.StringUtils;
@@ -58,6 +60,7 @@ import redis.clients.jedis.Jedis;
 
 import org.kcwiki.spider.akashilist.ThreadPool;
 import org.kcwiki.tools.Encoder;
+import org.kcwiki.tools.Start2Api;
 import org.kcwiki.tools.constant;
 
 /**
@@ -70,8 +73,16 @@ public class mainpage {
     private static final HashMap<String,JSONObject> daysMap = new LinkedHashMap<>();
     private static final HashMap<String,JSONObject> typesMap = new LinkedHashMap<>();
     private static final HashMap<String,JSONObject> itemsMap = new LinkedHashMap<>();
+    private static final HashMap<String,JSONObject> shipImgMap = new LinkedHashMap<>();
     private static final HashMap<String,String> typealias = new LinkedHashMap<>();
+    private static final HashMap<String,JSONObject> slotitemMap = new LinkedHashMap<>();
+    private static final HashMap<Integer,JSONObject> shipMap = new LinkedHashMap<>();
+    private static final HashMap<String,Integer> shipNameMap = new LinkedHashMap<>();
+    private static final HashMap<Integer,JSONObject> shipKcData = new LinkedHashMap<>();
+    private static final HashMap<String,Integer> slotitemNameMap = new LinkedHashMap<>();
+    private static final HashMap<Integer,JSONObject> slotitemKcData = new LinkedHashMap<>();
     private static boolean isInit = false;
+    private static int dayNo = getDayNO();
     
     public static void JSONFileGenerator() {
         initApp();
@@ -326,10 +337,17 @@ public class mainpage {
     }
     
     public static boolean init () {
-        if(readItems() && readFilter()){
+        if(readItems() && readFilter() && readJSON()){
             isInit = true;
         }
         return isInit();
+    }
+    
+    private static int getDayNO(){
+        TimeZone tz = TimeZone.getTimeZone("Japan"); 
+        Calendar jpcalendar = Calendar.getInstance(tz);
+        jpcalendar.setTime(new Date());
+        return jpcalendar.get(Calendar.DAY_OF_WEEK) - 1;
     }
     
     /**
@@ -445,6 +463,7 @@ public class mainpage {
     public HashMap getItemDetail(String wid,Boolean raw) {
         ArrayList<String> tmpList = new ArrayList<>();
         HashMap<String,Object> dataMap = new LinkedHashMap<>();
+        HashMap<String,Object> supportShipMap = new LinkedHashMap<>();
         HashMap<String,Object> resourceMap = new LinkedHashMap<>();
         HashMap<String,Object> statusMap = new LinkedHashMap<>();
         
@@ -471,7 +490,61 @@ public class mainpage {
             tmp.put("failure", "改修不可");
             return tmp;
         }
-        JSONObject itemDetails = item.getJSONArray("remodel_info").getJSONObject(0).getJSONObject("resource_cost").getJSONObject("0 ～ 5");
+        String slotitemName = item.getString("item_name");
+        int slotitemID = slotitemNameMap.get(slotitemName);
+        dataMap.put("id", slotitemID);
+        dataMap.put("wiki_id", slotitemKcData.get(slotitemID).getInteger("sort_no"));
+        JSONObject itemDetails = item.getJSONArray("remodel_info").getJSONObject(0);
+        JSONArray support_ships = itemDetails.getJSONArray("support_ships");
+        ArrayList<HashMap<String,Object>> supportShipList = new ArrayList<>();
+        for(Object ships:support_ships){
+            JSONObject support_ship = (JSONObject) ships;
+            JSONArray support_weeks = support_ship.getJSONArray("support_weeks");
+            if(!support_weeks.getBoolean(dayNo)){
+                continue;
+            }
+            String name = support_ship.getString("support_ship").trim();
+            int shipID = shipNameMap.get(name);
+            supportShipMap.put("name",name);
+            supportShipMap.put("id", shipID);
+            String SortNo = shipKcData.get(shipID).getString("wiki_id").trim();
+            supportShipMap.put("wiki_id",SortNo);
+            /*if(SortNo == null){
+                SortNo = String.format("%04d", shipLastIDMap.get(ID))+"a";
+            }*/
+            String filename = "KanMusu" + SortNo + "Banner" + ".jpg";
+            String hash = encrypt32(filename);
+            String url = "https://upload.kcwiki.org/commons/" +hash.substring(0, 1)+ "/" +hash.substring(0, 2)+ "/" + filename ;
+            /*JSONArray supportShips = typesMap.get("all").getJSONObject(wid).getJSONArray("supportShip");
+            for(Object obj:supportShips){
+                JSONObject supportShip = (JSONObject) obj;
+                url = supportShip.getString("imgurl");
+                String SortNo = url.substring(url.indexOf("/s")+2, url.length()-4);
+                if(SortNo.contains("b")){
+                    SortNo = SortNo.substring(0, SortNo.length()-1);
+                    int tmpID = shipMap.get(Integer.valueOf(SortNo)).getInteger("api_aftershipid");
+                    if(tmpID == ID){
+                        break;
+                    }else{
+                        continue;
+                    }
+                }else if(shipSortNoMap.containsKey(SortNo)){
+                    int tmpID = shipSortNoMap.get(SortNo);
+                    if(tmpID == ID){
+                        break;
+                    }else{
+                        continue;
+                    }
+                }
+            }*/
+            supportShipMap.put("imgurl",url);
+            supportShipList.add((HashMap) supportShipMap.clone());
+            supportShipMap.clear();
+        }
+        dataMap.put("supportShip", supportShipList.clone());
+        supportShipList.clear();
+        
+        itemDetails = item.getJSONArray("remodel_info").getJSONObject(0).getJSONObject("resource_cost").getJSONObject("0 ～ 5");
         tmpList.add(itemDetails.getString("buildkit_num"));
         tmpList.add(itemDetails.getString("remodelkit_num"));
         tmpList.add(itemDetails.getString("equipkit"));
@@ -516,7 +589,7 @@ public class mainpage {
         }
         dataMap.put("status", statusMap.clone());
         statusMap.clear();
-        
+        //JSON.toJSONString(dataMap);
         return dataMap;
     }
 
@@ -548,13 +621,65 @@ public class mainpage {
         return Days[w];
     }
     
+    public static boolean readJSON(){
+        JSONObject start2 = JSON.parseObject(new Start2Api().GetStart2Api(constant.getStartUrl()));
+        JSONArray List = start2.getJSONArray("api_mst_slotitem");
+        for(int i = 0; i < List.size(); i++) {
+            JSONObject tmp = List.getJSONObject(i);
+            slotitemMap.put(tmp.getString("api_id"), tmp);
+            slotitemNameMap.put(tmp.getString("api_name").trim(), tmp.getInteger("api_id"));
+        }
+        List = start2.getJSONArray("api_mst_ship");
+        for(int i = 0; i < List.size(); i++) {
+            JSONObject tmp = List.getJSONObject(i);
+            shipMap.put(tmp.getInteger("api_id"), tmp);
+            shipNameMap.put(tmp.getString("api_name").trim(), tmp.getInteger("api_id"));
+        }
+        JSONArray kcdata_ship = JSON.parseArray(new Start2Api().GetStart2Api(constant.getKcdata_ship()));
+        for(int i = 0; i < kcdata_ship.size(); i++) {
+            JSONObject tmp = kcdata_ship.getJSONObject(i);
+            shipKcData.put(tmp.getInteger("id"), tmp);
+        }
+        JSONArray kcdata_slotitem = JSON.parseArray(new Start2Api().GetStart2Api(constant.getKcdata_slotitem()));
+        for(int i = 0; i < kcdata_slotitem.size(); i++) {
+            JSONObject tmp = kcdata_slotitem.getJSONObject(i);
+            slotitemKcData.put(tmp.getInteger("id"), tmp);
+        }
+        return true;
+    }
+    
+    public static String encrypt32(String encryptStr) {  
+        MessageDigest md5;  
+        try {  
+            md5 = MessageDigest.getInstance("MD5");  
+            byte[] md5Bytes = md5.digest(encryptStr.getBytes());  
+            StringBuffer hexValue = new StringBuffer();  
+            for (int i = 0; i < md5Bytes.length; i++) {  
+                int val = ((int) md5Bytes[i]) & 0xff;  
+                if (val < 16)  
+                    hexValue.append("0");  
+                hexValue.append(Integer.toHexString(val));  
+            }  
+            encryptStr = hexValue.toString();  
+        } catch (Exception e) {  
+            throw new RuntimeException(e);  
+        }  
+        return encryptStr;  
+    }  
+    
+    public static String encrypt16(String encryptStr) {  
+        return encrypt32(encryptStr).substring(8, 24);  
+    } 
+    
     public static void main(String[] args) {
-        JSONFileGenerator();
+        //encrypt16("KanMusu345Banner");
+        //JSONFileGenerator();
         initApp();
         init(); 
-        new mainpage().getTypeList();
+        //new mainpage().getTypeList();
         //JSON.toJSONString(new mainpage().getItemList("all"));
-        JSON.toJSONString(new mainpage().getItemDetail("w020",false));
+        HashMap tmp = new mainpage().getItemDetail("w197",false);
+        JSON.toJSONString(tmp);
         /*HashMap tmp;
         tmp = new mainpage().search( Jsoup.parse(new mainpage().User_simulation("all",dayid())) );
         JSON.toJSONString(tmp.clone());

@@ -9,18 +9,20 @@ import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
 import com.alibaba.fastjson.TypeReference;
 import com.alibaba.fastjson.parser.Feature;
+import java.util.Calendar;
 import java.util.Collections;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.Set;
+import java.util.TimeZone;
 import javax.servlet.http.HttpServletRequest;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.kcwiki.redis.JedisPoolUtils;
-import static org.kcwiki.spider.akashilist.mainpage.dayid;
 import redis.clients.jedis.Jedis;
 
 /**
@@ -29,6 +31,7 @@ import redis.clients.jedis.Jedis;
  */
 public class ControlTower {
     private static Log logger = LogFactory.getLog(ControlTower.class);  
+    private static final String[] Days = {"sun", "mon", "tue", "wed", "thu", "fry", "sat"};
     
     public HashMap controller(String channel, HttpServletRequest request) {
         Jedis jedis = JedisPoolUtils.getJedis(); 
@@ -62,13 +65,6 @@ public class ControlTower {
                 case "point":
                     mapno = request.getParameter("mapno");
                     String point = request.getParameter("point");
-                    if(point.endsWith("null")){
-                        point = null;
-                    }else if(point.length()>1){
-                        //point = point.substring(0,point.indexOf("(B"));
-                        //point = point.substring(0,1);
-                        point = point.trim();
-                    }
                     String difficulty = request.getParameter("difficulty");
                     String assessment = request.getParameter("assessment");
                     if(Integer.valueOf(mapno) > 300){
@@ -107,7 +103,8 @@ public class ControlTower {
                 case "akashilist":
                     String type = request.getParameter("type");
                     if(type == null || StringUtils.isBlank(type)) type = "all";
-                    querystring = "akashilist" + dayid() + type ;
+                    String day = dayid();
+                    querystring = "akashilist" + day + type ;
                     result = jedis.get(querystring);
                     if(result == null || result.equals("null")) {
                         result = JSON.toJSONString(new org.kcwiki.spider.akashilist.mainpage().getItemList(type));
@@ -118,10 +115,10 @@ public class ControlTower {
                     String wid = request.getParameter("wid");
                     String raw = request.getParameter("raw");
                     boolean boolean_raw = false;
+                    day = dayid();
                     if(raw == null)
                         raw = "false";
-                    querystring = "akashiitem" + wid + raw;
-                    
+                    querystring = "akashiitem" + wid + day + raw;
                     if(raw.toLowerCase().equals("true")){
                         boolean_raw = true;
                     }
@@ -162,5 +159,15 @@ public class ControlTower {
         if(JSON.toJSONString(tmpHm).equals(JSON.toJSONString(data))) System.out.println(true);*/
         
         return data;
+    }
+    
+    public static String dayid(){
+        TimeZone tz = TimeZone.getTimeZone("Japan"); 
+        Calendar jpcalendar = Calendar.getInstance(tz);
+        jpcalendar.setTime(new Date());
+        int w = jpcalendar.get(Calendar.DAY_OF_WEEK) - 1;
+        if (w < 0)
+            w = 0;
+        return Days[w];
     }
 }
