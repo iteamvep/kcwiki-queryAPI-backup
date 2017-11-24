@@ -45,6 +45,7 @@ import java.security.MessageDigest;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.Comparator;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -59,6 +60,7 @@ import org.kcwiki.tools.RandomIdGenerator;
 import redis.clients.jedis.Jedis;
 
 import org.kcwiki.spider.akashilist.ThreadPool;
+import org.kcwiki.spider.akashilist.mainpage.SortByType;
 import org.kcwiki.tools.Encoder;
 import org.kcwiki.tools.Start2Api;
 import org.kcwiki.tools.constant;
@@ -81,6 +83,7 @@ public class mainpage {
     private static final HashMap<Integer,JSONObject> shipKcData = new LinkedHashMap<>();
     private static final HashMap<String,Integer> slotitemNameMap = new LinkedHashMap<>();
     private static final HashMap<Integer,JSONObject> slotitemKcData = new LinkedHashMap<>();
+    private static final HashMap<String,Integer> shipTypes = new LinkedHashMap<>();
     private static boolean isInit = false;
     private static int dayNo = getDayNO();
     
@@ -180,9 +183,10 @@ public class mainpage {
         Document html = null;
         HashMap<String,String> dataMap = new LinkedHashMap<>();
         try {
-            html = Jsoup.connect("http://akashi-list.me/")
+            //html = Jsoup.connect("http://akashi-list.me/")   
+            html = Jsoup.connect("https://akashi-list.kcwiki.org/")
                     .header("User-Agent", "Mozilla/5.0 (Windows NT 6.3; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/61.0.3163.100 Safari/537.36")
-                    .proxy("127.0.0.1", 1090)
+                    //.proxy("127.0.0.1", 1090)
                     .timeout(3000)
                     .get();
         } catch (IOException ex) {
@@ -237,7 +241,8 @@ public class mainpage {
             proxyConfig.setProxyPort(1090);  
                 
 		try {
-			HtmlPage page = webClient.getPage("http://akashi-list.me/"); // 解析获取页面
+			//HtmlPage page = webClient.getPage("http://akashi-list.me/"); // 解析获取页面
+                        HtmlPage page = webClient.getPage("https://akashi-list.kcwiki.org/");
                         DomElement button = page.getElementById(day); // 获取提交按钮
 			HtmlPage page2 = button.click(); // 模拟点击
                         webClient.waitForBackgroundJavaScript(1000);//设置页面等待js响应时间,
@@ -339,6 +344,12 @@ public class mainpage {
     public static boolean init () {
         if(readItems() && readFilter() && readJSON()){
             isInit = true;
+        }
+        String[] shiptypes = {"駆逐艦","軽巡洋艦","重巡洋艦","戦艦","軽空母","正規空母","水上機母艦","航空戦艦","航空巡洋艦","重雷装巡洋艦","練習巡洋艦","潜水艦","潜水空母"};
+        int no = 0;
+        for(String type:shiptypes){
+            no++;
+            shipTypes.put(type,no);
         }
         return isInit();
     }
@@ -491,9 +502,12 @@ public class mainpage {
             return tmp;
         }
         String slotitemName = item.getString("item_name");
+        if(slotitemName.equals("10cm高角砲＋高射装置")){
+            slotitemName = "10cm連装高角砲+高射装置";
+        }
         int slotitemID = slotitemNameMap.get(slotitemName);
         dataMap.put("id", slotitemID);
-        dataMap.put("wiki_id", slotitemKcData.get(slotitemID).getInteger("sort_no"));
+        dataMap.put("wiki_id", slotitemKcData.get(slotitemID).getString("sort_no").trim());
         JSONObject itemDetails = item.getJSONArray("remodel_info").getJSONObject(0);
         JSONArray support_ships = itemDetails.getJSONArray("support_ships");
         ArrayList<HashMap<String,Object>> supportShipList = new ArrayList<>();
@@ -504,40 +518,60 @@ public class mainpage {
                 continue;
             }
             String name = support_ship.getString("support_ship").trim();
-            int shipID = shipNameMap.get(name);
-            supportShipMap.put("name",name);
-            supportShipMap.put("id", shipID);
-            String SortNo = shipKcData.get(shipID).getString("wiki_id").trim();
-            supportShipMap.put("wiki_id",SortNo);
-            /*if(SortNo == null){
-                SortNo = String.format("%04d", shipLastIDMap.get(ID))+"a";
-            }*/
-            String filename = "KanMusu" + SortNo + "Banner" + ".jpg";
-            String hash = encrypt32(filename);
-            String url = "https://upload.kcwiki.org/commons/" +hash.substring(0, 1)+ "/" +hash.substring(0, 2)+ "/" + filename ;
-            /*JSONArray supportShips = typesMap.get("all").getJSONObject(wid).getJSONArray("supportShip");
-            for(Object obj:supportShips){
-                JSONObject supportShip = (JSONObject) obj;
-                url = supportShip.getString("imgurl");
-                String SortNo = url.substring(url.indexOf("/s")+2, url.length()-4);
-                if(SortNo.contains("b")){
-                    SortNo = SortNo.substring(0, SortNo.length()-1);
-                    int tmpID = shipMap.get(Integer.valueOf(SortNo)).getInteger("api_aftershipid");
-                    if(tmpID == ID){
-                        break;
-                    }else{
-                        continue;
-                    }
-                }else if(shipSortNoMap.containsKey(SortNo)){
-                    int tmpID = shipSortNoMap.get(SortNo);
-                    if(tmpID == ID){
-                        break;
-                    }else{
-                        continue;
+            if(name.equals("-")){
+                JSONObject item_equip = item.getJSONObject("item_equip");
+                ArrayList<String> allowed = new ArrayList<>();
+                for(String type:item_equip.keySet()){
+                    if(type.equals("extra")){
+                        JSONArray extras = item_equip.getJSONArray("extra");
+                        for (Iterator<Object> it = extras.iterator(); it.hasNext();) {
+                            String extra = (String) it.next();
+                            allowed.add(extra);
+                        }
+                    }else if(item_equip.getBoolean(type)){
+                        allowed.add(type);
                     }
                 }
-            }*/
-            supportShipMap.put("imgurl",url);
+                allowed.sort(new SortByType());
+                supportShipMap.put("info","listedships");
+                supportShipMap.put("list",allowed.clone());
+                allowed.clear();
+            }else{
+                int shipID = shipNameMap.get(name);
+                supportShipMap.put("name",name);
+                supportShipMap.put("id", shipID);
+                String SortNo = shipKcData.get(shipID).getString("wiki_id").trim();
+                supportShipMap.put("wiki_id",SortNo);
+                /*if(SortNo == null){
+                    SortNo = String.format("%04d", shipLastIDMap.get(ID))+"a";
+                }*/
+                String filename = "KanMusu" + SortNo + "Banner" + ".jpg";
+                String hash = encrypt32(filename);
+                String url = "https://upload.kcwiki.org/commons/" +hash.substring(0, 1)+ "/" +hash.substring(0, 2)+ "/" + filename ;
+                /*JSONArray supportShips = typesMap.get("all").getJSONObject(wid).getJSONArray("supportShip");
+                for(Object obj:supportShips){
+                    JSONObject supportShip = (JSONObject) obj;
+                    url = supportShip.getString("imgurl");
+                    String SortNo = url.substring(url.indexOf("/s")+2, url.length()-4);
+                    if(SortNo.contains("b")){
+                        SortNo = SortNo.substring(0, SortNo.length()-1);
+                        int tmpID = shipMap.get(Integer.valueOf(SortNo)).getInteger("api_aftershipid");
+                        if(tmpID == ID){
+                            break;
+                        }else{
+                            continue;
+                        }
+                    }else if(shipSortNoMap.containsKey(SortNo)){
+                        int tmpID = shipSortNoMap.get(SortNo);
+                        if(tmpID == ID){
+                            break;
+                        }else{
+                            continue;
+                        }
+                    }
+                }*/
+                supportShipMap.put("imgurl",url);
+            }
             supportShipList.add((HashMap) supportShipMap.clone());
             supportShipMap.clear();
         }
@@ -678,7 +712,7 @@ public class mainpage {
         init(); 
         //new mainpage().getTypeList();
         //JSON.toJSONString(new mainpage().getItemList("all"));
-        HashMap tmp = new mainpage().getItemDetail("w197",false);
+        HashMap tmp = new mainpage().getItemDetail("w105",false);
         JSON.toJSONString(tmp);
         /*HashMap tmp;
         tmp = new mainpage().search( Jsoup.parse(new mainpage().User_simulation("all",dayid())) );
@@ -686,6 +720,28 @@ public class mainpage {
         //new mainpage().getItemDetail("w026");*/
     }
     
+    class SortByType implements Comparator {
+        public int compare(Object o1, Object o2) {
+            String t1 = (String) o1;
+            String t2 = (String) o2;
+            int n1;
+            int n2;
+            if(shipTypes.containsKey(t1)){
+                n1 = shipTypes.get(t1);
+            }else{
+                n1 = 100;
+            }
+            if(shipTypes.containsKey(t2)){
+                n2 = shipTypes.get(t2);
+            }else{
+                n2 = 100;
+            }
+            if (n1 < n2)
+                return -1;
+            return 1;
+        }
+    }
+
     
     //---Deprecated---已经过时的方法---
     /*public HashMap search(Document html){
