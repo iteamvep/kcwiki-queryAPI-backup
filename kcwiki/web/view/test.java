@@ -6,8 +6,11 @@
 package org.kcwiki.web.view;
 
 import com.alibaba.fastjson.JSON;
+import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
+import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -16,6 +19,7 @@ import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.servlet.ServletException;
+import javax.servlet.ServletInputStream;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -35,6 +39,7 @@ public class test extends HttpServlet{
   {
     response.setContentType("text/xml");
     response.setContentType("text/html;charset=UTF-8;pageEncoding=UTF-8"); 
+    request.setCharacterEncoding("UTF-8"); 
             
     HashMap<String,Object> data = new LinkedHashMap<>();
 
@@ -100,7 +105,41 @@ public class test extends HttpServlet{
                     tmp = controlTower.controller("thankslist", request);
                     data.put("status", tmp !=null? "success":"error");
                     data.put("data",tmp !=null? tmp:null);
-                    break;       
+                    break;    
+                case "quest-test":
+                    //JSONArray questslist = JSON.parseArray(new String(request.getParameter("questslist").getBytes("iso-8859-1"), "utf-8"));
+                    //JSONArray questsmap = JSON.parseArray(new String(request.getParameter("questsmap").getBytes("iso-8859-1"), "utf-8"));
+                    String result = null;
+                    boolean isdirection = false;
+                    if(request.getParameter("direction")!=null){
+                        isdirection = request.getParameter("direction").toLowerCase().equals("true");
+                    }
+                    
+                    String questslist = request.getParameter("questslist");
+                    String questsmap = request.getParameter("questsmap");
+                    
+                    if(questslist != null) {
+                        if(isdirection) {
+                            if(questsmap != null){
+                                result = new org.kcwiki.test.tools.questreport().test(questslist,questsmap,isdirection);
+                            }
+                        }else{
+                            result = new org.kcwiki.test.tools.questreport().test(questslist,questsmap,isdirection);
+                        }
+                    }
+                        
+                    /*BufferedReader br = new BufferedReader(new InputStreamReader((ServletInputStream) request.getInputStream()));  
+                    String line = null;  
+                    StringBuilder sb = new StringBuilder();  
+                    while ((line = br.readLine()) != null) {  
+                        sb.append(line);  
+                    }  
+                    System.out.println(sb.toString());*/
+                    //result = new org.kcwiki.tools.questreport().test("");
+                    data.put("status", result !=null? "success":"error");
+                    data.put("data",result !=null? result:null);
+                    break; 
+                    
             }
         } else {
             data.put("status", "error");

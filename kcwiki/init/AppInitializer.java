@@ -53,7 +53,7 @@ public class AppInitializer implements ServletContextListener {
                 File dataPath = new File(constant.getDataPath());
                 if(!dataPath.exists())
                     dataPath.mkdirs();
-                if(org.kcwiki.spider.akashilist.mainpage.init())
+                if(org.kcwiki.spider.akashilist.mainpage.init() && org.kcwiki.test.tools.questreport.init())
                     isInit = true;
             } catch (UnsupportedEncodingException ex) {
                 Logger.getLogger(AppInitializer.class.getName()).log(Level.SEVERE, null, ex);

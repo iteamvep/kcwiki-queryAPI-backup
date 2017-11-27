@@ -14,6 +14,13 @@ import java.util.HashMap;
  */
 public class constant {
 
+    /**
+     * @return the kcdata_quest
+     */
+    public static String getKcdata_quest() {
+        return kcdata_quest;
+    }
+
    
     public final static String LINESEPARATOR = System.getProperty("line.separator", "\n");
     public final static String FILESEPARATOR = File.separator;
@@ -27,7 +34,7 @@ public class constant {
     //private static final String kcdata_slotitem = "http://kcwikizh.github.io/kcdata/slotitem/all.json";
     private static final String kcdata_ship = "https://acc.kcwiki.org/kcdata/ship/all.json";
     private static final String kcdata_slotitem = "https://acc.kcwiki.org/kcdata/slotitem/all.json";
-    
+    private static final String kcdata_quest = "https://acc.kcwiki.org/kcdata/quest/all.json";
     /**
      * @return the webrootPath
      */
