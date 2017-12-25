@@ -1,3 +1,6 @@
 
 /kcwiki/storage/*
 /kcwiki/web/view/debug.java
+/kcwiki/web/robot/*
+kcwiki/web/api/robot.java
+kcwiki/web/websocket/robotWS.java

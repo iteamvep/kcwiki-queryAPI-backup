@@ -109,6 +109,9 @@ public class questreport {
                     DBCenter.unknownQuestConjecture.put(id, List2Set((List<Integer>) guessList.clone()));
                 } else {
                     List<Integer> tmp = new ArrayList();
+                    Set<Integer> unKnown = new HashSet();
+                    unKnown.addAll(guessSet);
+                    unKnown.removeAll(idSet);
                     for(int p_id:playerQuests){
                         if(DBCenter.questsMap.containsKey(p_id)){
                             JSONArray arr = DBCenter.questsMap.get(p_id).getJSONArray("prerequisite");
@@ -121,6 +124,7 @@ public class questreport {
                     }
                     guessSet.retainAll(tmp);
                     guessList.addAll(guessSet);
+                    guessList.addAll(unKnown);
                     DBCenter.unknownQuestConjecture.put(id, List2Set((List<Integer>) guessList.clone()));
                 }
                 guessList.clear();

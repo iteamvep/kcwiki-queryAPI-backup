@@ -7,6 +7,7 @@ package org.kcwiki.init;
 
 import java.io.File;
 import java.io.UnsupportedEncodingException;
+import static java.lang.Thread.sleep;
 import java.util.Date;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -17,7 +18,10 @@ import javax.servlet.ServletContextListener;
 
 import org.kcwiki.redis.JedisPoolUtils;
 import org.kcwiki.tools.constant;
+import org.kcwiki.web.robot.robotinit;
 import static org.kcwiki.tools.constant.FILESEPARATOR;
+
+
 /**
  *
  * @author iTeam_VEP
@@ -35,6 +39,7 @@ public class AppInitializer implements ServletContextListener {
     public static boolean initApp() {
         if(!isInit()) {
             try {
+                MainServer.init();
                 String classPath = AppInitializer.class.getResource("/").toString();
                 String path = null;
                 if(System.getProperty("os.name").toLowerCase().startsWith("windows")){
@@ -48,7 +53,6 @@ public class AppInitializer implements ServletContextListener {
                 } else {
                     constant.setWebrootPath(path.substring(0, lastIndex));
                 }
-                constant.setLocalPath(java.net.URLDecoder.decode(constant.getWebrootPath() + FILESEPARATOR + "custom", "utf-8"));
                 constant.setDataPath(constant.getWebrootPath() + FILESEPARATOR + "WEB-INF" + FILESEPARATOR + "custom" + FILESEPARATOR + "data");
                 File dataPath = new File(constant.getDataPath());
                 if(!dataPath.exists())
@@ -60,9 +64,28 @@ public class AppInitializer implements ServletContextListener {
             }
         }
         new constant().getFilterFilePath();
+        DelayInit ();
         return isInit();
     }
 
+    private static boolean DelayInit () {
+        Runnable rn = new Runnable(){
+            @Override
+            public void run() {
+                while(!isInit) {
+                    try {
+                        sleep(1000);
+                    } catch (InterruptedException ex) {
+                        Logger.getLogger(AppInitializer.class.getName()).log(Level.SEVERE, null, ex);
+                    }
+                }
+                robotinit.initrobot();
+            }
+        };
+        rn.run();
+        return true;
+    }
+    
     @Override
     public void contextInitialized(ServletContextEvent sce) {
         //System.out.println("程序开始初始化： "+new Date());
@@ -86,4 +109,5 @@ public class AppInitializer implements ServletContextListener {
         
         System.out.println("context has been Destroyed.");
     }
+    
 }

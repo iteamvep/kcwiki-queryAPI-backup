@@ -17,6 +17,8 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 import org.kcwiki.web.api.newquest;
+import org.kcwiki.web.api.robot;
+import org.kcwiki.web.robot.robotinit;
 
 /**
  *
@@ -52,6 +54,9 @@ public class api extends HttpServlet {
                     break;
                 case "quest":
                     sb.append(new newquest().getData());
+                    break;
+                case "robot":
+                    sb.append(new robot().getData());
                     break;
                 case "null":
                     sb.append(request.getScheme()).append("://").append(request.getServerName()).append(":").append(request.getServerPort());

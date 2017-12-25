@@ -7,12 +7,29 @@ package org.kcwiki.tools;
 
 import java.io.File;
 import java.util.HashMap;
+import org.kcwiki.init.MainServer;
 
 /**
  *
  * @author iTeam_VEP
  */
 public class constant {
+
+    /**
+     * @return the dataName
+     */
+    public static String getDataName() {
+        return dataName;
+    }
+
+    /**
+     * @return the publishName
+     */
+    public static String getPublishName() {
+        return publishName;
+    }
+
+
 
     /**
      * @return the kcdata_quest
@@ -26,9 +43,10 @@ public class constant {
     public final static String FILESEPARATOR = File.separator;
     private static String webrootPath = null;
     private static String dataPath = null;
-    private static String localPath = null;
-    private final String itemsFilePath = getDataPath() + constant.FILESEPARATOR + "akashi.json";
-    private final String filterFilePath = getDataPath() + constant.FILESEPARATOR + "akashiFilter.json";
+    private static String dataName = "data";
+    private static String publishName = "publish";
+    private final String itemsFilePath = MainServer.getDataFolder() + constant.FILESEPARATOR + "akashi.json";
+    private final String filterFilePath = MainServer.getDataFolder() + constant.FILESEPARATOR + "akashiFilter.json";
     private static final String StartUrl = "https://acc.kcwiki.org/start2";
     //private static final String kcdata_ship = "http://kcwikizh.github.io/kcdata/ship/all.json";
     //private static final String kcdata_slotitem = "http://kcwikizh.github.io/kcdata/slotitem/all.json";
@@ -47,34 +65,6 @@ public class constant {
      */
     public static void setWebrootPath(String aWebrootPath) {
         webrootPath = aWebrootPath;
-    }
-
-    /**
-     * @return the dataPath
-     */
-    public static String getDataPath() {
-        return dataPath;
-    }
-
-    /**
-     * @param aDataPath the dataPath to set
-     */
-    public static void setDataPath(String aDataPath) {
-        dataPath = aDataPath;
-    }
-
-    /**
-     * @return the localPath
-     */
-    public static String getLocalPath() {
-        return localPath;
-    }
-
-    /**
-     * @param aLocalPath the localPath to set
-     */
-    public static void setLocalPath(String aLocalPath) {
-        localPath = aLocalPath;
     }
 
     /**
@@ -111,6 +101,21 @@ public class constant {
     public static String getKcdata_slotitem() {
         return kcdata_slotitem;
     }
+
+    /**
+     * @return the dataPath
+     */
+    public static String getDataPath() {
+        return dataPath;
+    }
+
+    /**
+     * @param aDataPath the dataPath to set
+     */
+    public static void setDataPath(String aDataPath) {
+        dataPath = aDataPath;
+    }
+
 
     
 }
